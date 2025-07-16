@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pedido de Lanches</title>
+</head>
+<body>
+    <h1>Pedido de Lanches</h1>
+    <h2>Informe seus dados:</h2>
+
+    <!-- Formulário de dados do cliente -->
+    <form id="order-form">
+        <label for="name">Nome: </label>
+        <input type="text" id="name" name="name" required><br><br>
+
+        <h3>Escolha seus itens e a quantidade:</h3>
+        <label for="x-burguer">X-Burguer</label>
+        <input type="number" id="x-burguer" name="x-burguer" value="0" min="0"><br>
+
+        <label for="x-salada">X-Salada</label>
+        <input type="number" id="x-salada" name="x-salada" value="0" min="0"><br>
+
+        <label for="batata">Batata Frita</label>
+        <input type="number" id="batata" name="batata" value="0" min="0"><br>
+
+        <label for="refrigerante">Refrigerante</label>
+        <input type="number" id="refrigerante" name="refrigerante" value="0" min="0"><br>
+
+        <button type="submit">Fazer Pedido</button>
+    </form>
+
+    <h2>Fila de Pedidos:</h2>
+    <ul id="order-list"></ul>
+
+    <button onclick="nextOrder()">Chamar Próximo Pedido</button>
+    <h2>Pedido Atual: <span id="current-order">Nenhum</span></h2>
+
+    <p><a href="/display" target="_blank">Abrir Tela de Exibição</a></p>
+
+    <script>
+        // Função para enviar o pedido com nome e itens
+        document.getElementById('order-form').addEventListener('submit', function(event) {
+            event.preventDefault();
+
+            const name = document.getElementById('name').value;
+            const xBurguer = document.getElementById('x-burguer').value;
+            const xSalada = document.getElementById('x-salada').value;
+            const batata = document.getElementById('batata').value;
+            const refrigerante = document.getElementById('refrigerante').value;
+
+            // Enviar o pedido
+            fetch(`/order/${name}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    xBurguer: parseInt(xBurguer),
+                    xSalada: parseInt(xSalada),
+                    batata: parseInt(batata),
+                    refrigerante: parseInt(refrigerante)
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                alert(`Pedido registrado: ${data.order}`);
+                updateOrders();
+            });
+        });
+
+        // Atualizar a lista de pedidos
+        function updateOrders() {
+            fetch('/orders')
+                .then(response => response.json())
+                .then(data => {
+                    const list = document.getElementById('order-list');
+                    list.innerHTML = '';
+                    data.orders.forEach(order => {
+                        const li = document.createElement('li');
+                        li.textContent = order;
+                        list.appendChild(li);
+                    });
+                });
+        }
+
+        // Chamar o próximo pedido
+        function nextOrder() {
+            fetch('/next')
+                .then(response => response.json())
+                .then(data => {
+                    document.getElementById('current-order').innerText = data.current_order || 'Nenhum';
+                    updateOrders();
+                });
+        }
+
+        updateOrders();
+    </script>
+</body>
+</html>
+
